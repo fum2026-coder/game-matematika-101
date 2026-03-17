@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Matematika Pro - Fokus Belajar</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0; color: #333;
+        }
+        .game-container {
+            background: white; padding: 2rem; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            text-align: center; width: 90%; max-width: 500px;
+        }
+        .section-title { font-size: 0.8rem; color: #95a5a6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .menu-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+        .btn-opt {
+            padding: 8px 15px; border: 2px solid #3498db; background: white;
+            color: #3498db; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .btn-opt.active { background: #3498db; color: white; }
+        .btn-lvl { border-color: #e67e22; color: #e67e22; }
+        .btn-lvl.active { background: #e67e22; color: white; border-color: #e67e22; }
+        
+        .score-board { font-size: 1.1rem; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #3498db; }
+        .question { font-size: 3.5rem; font-weight: bold; margin: 20px 0; color: #2c3e50; }
+        input {
+            width: 80%; padding: 15px; font-size: 2rem; border: 3px solid #eee;
+            border-radius: 12px; text-align: center; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: #3498db; box-shadow: 0 0 10px rgba(52,152,219,0.2); }
+        #feedback { margin-top: 20px; font-weight: bold; height: 30px; font-size: 1.2rem; }
+        .correct { color: #27ae60; }
+        .wrong { color: #e74c3c; animation: shake 0.3s; }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="section-title">Mode Operasi</div>
+    <div class="menu-group">
+        <button class="btn-opt active" onclick="setMode('all', this)">Campuran</button>
+        <button class="btn-opt" onclick="setMode('+', this)">+</button>
+        <button class="btn-opt" onclick="setMode('-', this)">-</button>
+        <button class="btn-opt" onclick="setMode('*', this)">×</button>
+        <button class="btn-opt" onclick="setMode('/', this)">÷</button>
+    </div>
+
+    <div class="section-title">Tingkat Kesulitan</div>
+    <div class="menu-group">
+        <button class="btn-opt btn-lvl active" onclick="setLevel(2, this)">2 Digit</button>
+        <button class="btn-opt btn-lvl" onclick="setLevel(3, this)">3 Digit</button>
+    </div>
+
+    <div class="score-board">
+        Skor: <span id="score">0</span> | Terbaik: <span id="high-score">0</span>
+    </div>
+    
+    <div class="question" id="question">--</div>
+    
+    <input type="number" id="answer-input" placeholder="?" autofocus>
+    <div id="feedback"></div>
+    <p style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px;">Tekan ENTER untuk cek jawaban</p>
+</div>
+
+<script>
+    let score = 0;
+    let highScore = localStorage.getItem("mathHighScore") || 0;
+    let currentCorrectAnswer = 0;
+    let currentMode = 'all';
+    let currentLevel = 2;
+
+    document.getElementById('high-score').innerText = highScore;
+
+    function setMode(mode, element) {
+        currentMode = mode;
+        element.parentElement.querySelectorAll('.btn-opt').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        generateQuestion();
+    }
+
+    function setLevel(lvl, element) {
+        currentLevel = lvl;
+        element.parentElement.querySelectorAll('.btn-lvl').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        generateQuestion();
+    }
+
+    function generateQuestion() {
+        const ops = ['+', '-', '*', '/'];
+        const op = (currentMode === 'all') ? ops[Math.floor(Math.random() * ops.length)] : currentMode;
+        
+        let a, b, text;
+        const min2 = 10, max2 = 99;
+        const min3 = 100, max3 = 999;
+
+        if (op === '+') {
+            a = Math.floor(Math.random() * (currentLevel === 2 ? 90 : 900)) + (currentLevel === 2 ? 10 : 100);
+            b = Math.floor(Math.random() * (currentLevel === 2 ? 90 : 900)) + (currentLevel === 2 ? 10 : 100);
+            currentCorrectAnswer = a + b;
+            text = `${a} + ${b}`;
+        } else if (op === '-') {
+            a = Math.floor(Math.random() * (currentLevel === 2 ? 90 : 900)) + (currentLevel === 2 ? 10 : 100);
+            b = Math.floor(Math.random() * a); 
+            currentCorrectAnswer = a - b;
+            text = `${a} - ${b}`;
+        } else if (op === '*') {
+            a = Math.floor(Math.random() * (currentLevel === 2 ? 90 : 900)) + (currentLevel === 2 ? 10 : 100);
+            b = Math.floor(Math.random() * 10) + 2; // Dibatasi agar perkalian tidak terlalu mustahil
+            currentCorrectAnswer = a * b;
+            text = `${a} × ${b}`;
+        } else if (op === '/') {
+            let res = Math.floor(Math.random() * (currentLevel === 2 ? 20 : 50)) + 2;
+            let div = Math.floor(Math.random() * 10) + 2;
+            let target = res * div;
+            currentCorrectAnswer = res;
+            text = `${target} ÷ ${div}`;
+        }
+
+        document.getElementById('question').innerText = text;
+        document.getElementById('answer-input').value = "";
+        document.getElementById('answer-input').focus();
+        document.getElementById('feedback').innerText = "";
+    }
+
+    function checkAnswer() {
+        const inputEl = document.getElementById('answer-input');
+        const val = inputEl.value;
+        const fb = document.getElementById('feedback');
+        
+        if(val === "") return;
+
+        if (parseInt(val) === currentCorrectAnswer) {
+            // JAWABAN BENAR
+            score += 10;
+            fb.innerText = "✅ BENAR! Lanjut soal berikutnya...";
+            fb.className = "correct";
+            
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem("mathHighScore", highScore);
+                document.getElementById('high-score').innerText = highScore;
+            }
+            document.getElementById('score').innerText = score;
+            
+            // Lanjut ke soal berikutnya setelah jeda singkat
+            setTimeout(generateQuestion, 1000);
+        } else {
+            // JAWABAN SALAH
+            fb.innerText = "❌ Salah! Coba hitung lagi...";
+            fb.className = "wrong";
+            
+            // Efek visual agar user tahu harus mencoba lagi
+            inputEl.value = "";
+            inputEl.focus();
+            
+            // Skor tidak bertambah, soal TIDAK diganti
+        }
+    }
+
+    document.getElementById('answer-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    generateQuestion();
+</script>
+
+</body>
+</html>
